@@ -4,96 +4,151 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Render News Feed.
- * Used by Shortcode and Block.
- *
- * @param array $args Attributes.
- * @return string HTML output.
+ * RENDERER: PURE HTML VIEW.
+ * Responsibility: Generate HTML strings based on inputs.
+ * Restrictions:
+ * - NO external_url access (unless passed as arg)
+ * - NO redirects
+ * - NO is_singular checks
+ * - NO global query checks
  */
-function n2n_render_news_feed( $user_args = array() ) {
-	// Defaults
+
+/**
+ * Render Single News Item Card.
+ * @return string HTML
+ */
+function n2n_render_news_item( $post_id, $args = [] ) {
+	$title     = get_the_title( $post_id );
+	$permalink = get_permalink( $post_id ); // ALWAYS link to permalink
+	$image_url = get_post_meta( $post_id, 'external_image_url', true );
+	$excerpt   = get_the_excerpt( $post_id );
+
+	$show_image   = ! empty( $args['show_image'] );
+	$show_excerpt = ! empty( $args['show_excerpt'] );
+	$new_tab      = ! empty( $args['new_tab'] );
+	
+	// Open SELF (permalink) in new tab if requested, though usually list items might differ.
+	// Requirement: "Link MUST be get_permalink"
+	$target = $new_tab ? 'target="_blank" rel="noopener noreferrer"' : '';
+
+	ob_start();
+	?>
+	<article class="n2n-news-card">
+		<?php if ( $show_image && $image_url ) : ?>
+			<div class="n2n-card-image">
+				<a href="<?php echo esc_url( $permalink ); ?>" <?php echo $target; ?>>
+					<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $title ); ?>">
+				</a>
+			</div>
+		<?php endif; ?>
+
+		<div class="n2n-card-content">
+			<h3 class="n2n-card-title">
+				<a href="<?php echo esc_url( $permalink ); ?>" <?php echo $target; ?>>
+					<?php echo esc_html( $title ); ?>
+				</a>
+			</h3>
+
+			<?php if ( $show_excerpt ) : ?>
+				<div class="n2n-card-excerpt">
+					<?php echo $excerpt; ?>
+				</div>
+			<?php endif; ?>
+
+			<div class="n2n-card-meta">
+				<span><?php echo get_the_date( '', $post_id ); ?></span>
+			</div>
+		</div>
+	</article>
+	<?php
+	return ob_get_clean();
+}
+
+/**
+ * Render News Query Loop.
+ * @return string HTML
+ */
+function n2n_render_news_query( $args = [] ) {
 	$defaults = array(
 		'posts_to_show' => 6,
 		'category_id'   => '',
 		'tag_id'        => '',
-		'layout'        => 'list', // list | grid
+		'layout'        => 'grid',
 		'show_image'    => true,
 		'show_excerpt'  => true,
-		'open_in_new_tab' => true,
+		'new_tab'       => false,
 	);
+	$args = wp_parse_args( $args, $defaults );
 
-	// Parse Args
-	$args = wp_parse_args( $user_args, $defaults );
-
-	// Build Query
 	$query_args = array(
-		'post_type'      => 'aggregated_news',
-		'posts_per_page' => intval( $args['posts_to_show'] ),
-		'post_status'    => 'publish',
-		'orderby'        => 'date',
-		'order'          => 'DESC',
+		'post_type'           => 'aggregated_news',
+		'posts_per_page'      => intval( $args['posts_to_show'] ),
+		'post_status'         => 'publish',
+		'orderby'             => 'date',
+		'order'               => 'DESC',
+		'ignore_sticky_posts' => true,
 	);
 
-	// Filtering
-	if ( ! empty( $args['category_id'] ) ) {
-		$query_args['cat'] = intval( $args['category_id'] );
-	}
-	if ( ! empty( $args['tag_id'] ) ) {
-		$query_args['tag_id'] = intval( $args['tag_id'] );
-	}
+	if ( ! empty( $args['category_id'] ) ) $query_args['cat']    = intval( $args['category_id'] );
+	if ( ! empty( $args['tag_id'] ) )      $query_args['tag_id'] = intval( $args['tag_id'] );
 
 	$query = new WP_Query( $query_args );
 
-	if ( ! $query->have_posts() ) {
-		return ''; // No posts, return empty or optional message
-	}
+	if ( ! $query->have_posts() ) return '';
 
 	$layout_class = 'n2n-layout-' . sanitize_html_class( $args['layout'] );
-	$wrapper_classes = 'n2n-news-feed ' . $layout_class;
+	$out = '<div class="n2n-news-feed ' . esc_attr( $layout_class ) . '">';
 
+	while ( $query->have_posts() ) {
+		$query->the_post();
+		$out .= n2n_render_news_item( get_the_ID(), $args );
+	}
+	wp_reset_postdata();
+
+	$out .= '</div>';
+	return $out;
+}
+
+/**
+ * Generate Interstitial HTML.
+ * Pure View function.
+ * @return string HTML
+ */
+function n2n_get_interstitial_html( $url, $image_url, $countdown = 0 ) {
 	ob_start();
 	?>
-	<div class="<?php echo esc_attr( $wrapper_classes ); ?>">
-		<?php while ( $query->have_posts() ) : $query->the_post(); 
-			$post_id = get_the_ID();
-			$title = get_the_title();
-			
-			// Determine Link: Always goes to permalink (handled by redirect/interstitial logic)
-			// OR if user wants direct link in card, requirements say:
-			// "Link should go to the aggregated_news permalink (so redirect/interstitial logic is centralized)"
-			$permalink = get_permalink();
-			$external_image = get_post_meta( $post_id, 'external_image_url', true );
-			
-			$target_attr = $args['open_in_new_tab'] ? 'target="_blank" rel="noopener noreferrer"' : '';
-			?>
-			<article class="n2n-news-item">
-				<?php if ( $args['show_image'] && $external_image ) : ?>
-					<div class="n2n-news-image">
-						<a href="<?php echo esc_url( $permalink ); ?>" <?php echo $target_attr; ?>>
-							<img src="<?php echo esc_url( $external_image ); ?>" alt="<?php echo esc_attr( $title ); ?>">
-						</a>
-					</div>
-				<?php endif; ?>
+	<div class="n2n-interstitial-wrapper">
+		<h1 class="n2n-interstitial-title"><?php the_title(); // Allowed as it is outputting current post title ?></h1>
+		
+		<?php if ( $image_url ) : ?>
+			<div class="n2n-interstitial-img">
+				<img src="<?php echo esc_url( $image_url ); ?>" alt="">
+			</div>
+		<?php endif; ?>
 
-				<div class="n2n-news-content">
-					<h3 class="n2n-news-title">
-						<a href="<?php echo esc_url( $permalink ); ?>" <?php echo $target_attr; ?>><?php echo esc_html( $title ); ?></a>
-					</h3>
-					
-					<?php if ( $args['show_excerpt'] ) : ?>
-						<div class="n2n-news-excerpt">
-							<?php the_excerpt(); ?>
-						</div>
-					<?php endif; ?>
+		<div class="n2n-interstitial-msg">
+			<p><?php esc_html_e( 'You are being redirected to the original article...', 'n2n-aggregator' ); ?></p>
+			<?php if ( $countdown > 0 ) : ?>
+				<p class="n2n-timer-msg">
+					<?php printf( esc_html__( 'Redirecting in %s seconds...', 'n2n-aggregator' ), '<span id="n2n-counter">' . absint( $countdown ) . '</span>' ); ?>
+				</p>
+			<?php endif; ?>
+		</div>
 
-					<div class="n2n-news-meta">
-						<span class="n2n-date"><?php echo get_the_date(); ?></span>
-					</div>
-				</div>
-			</article>
-		<?php endwhile; ?>
+		<div class="n2n-interstitial-actions">
+			<a href="<?php echo esc_url( $url ); ?>" class="button n2n-btn-primary">
+				<?php esc_html_e( 'Continue Reading', 'n2n-aggregator' ); ?>
+			</a>
+		</div>
+
+		<?php if ( $countdown > 0 ) : ?>
+			<script>
+			setTimeout(function() {
+				window.location.href = "<?php echo esc_url_raw( $url ); ?>";
+			}, <?php echo absint( $countdown ) * 1000; ?>);
+			</script>
+		<?php endif; ?>
 	</div>
 	<?php
-	wp_reset_postdata();
 	return ob_get_clean();
 }

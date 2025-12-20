@@ -3,10 +3,10 @@
   var registerBlockType = blocks.registerBlockType;
   var InspectorControls = blockEditor.InspectorControls;
   var PanelBody = components.PanelBody;
-  var ToggleControl = components.ToggleControl;
   var SelectControl = components.SelectControl;
   var RangeControl = components.RangeControl;
   var TextControl = components.TextControl;
+  var ToggleControl = components.ToggleControl;
   var ServerSideRender = serverSideRender;
 
   registerBlockType("n2n-aggregator/news-feed", {
@@ -14,34 +14,13 @@
     icon: "rss",
     category: "widgets",
     attributes: {
-      layout: {
-        type: "string",
-        default: "grid",
-      },
-      postsToShow: {
-        type: "number",
-        default: 6,
-      },
-      categoryId: {
-        type: "string",
-        default: "", // comma sep or single ID string
-      },
-      tagId: {
-        type: "string",
-        default: "",
-      },
-      showImage: {
-        type: "boolean",
-        default: true,
-      },
-      showExcerpt: {
-        type: "boolean",
-        default: true,
-      },
-      openInNewTab: {
-        type: "boolean",
-        default: true,
-      },
+      layout: { type: "string", default: "grid" },
+      postsToShow: { type: "number", default: 6 },
+      categoryId: { type: "string", default: "" },
+      tagId: { type: "string", default: "" },
+      showImage: { type: "boolean", default: true },
+      showExcerpt: { type: "boolean", default: true },
+      openInNewTab: { type: "boolean", default: true },
     },
     edit: function (props) {
       var attributes = props.attributes;
@@ -53,7 +32,7 @@
           { key: "inspector" },
           el(
             PanelBody,
-            { title: "Feed Settings", initialOpen: true },
+            { title: "Settings", initialOpen: true },
             el(SelectControl, {
               label: "Layout",
               value: attributes.layout,
@@ -66,10 +45,10 @@
               },
             }),
             el(RangeControl, {
-              label: "Posts to Show",
+              label: "Posts Limit",
               value: attributes.postsToShow,
               min: 1,
-              max: 20,
+              max: 40,
               onChange: function (val) {
                 setAttributes({ postsToShow: val });
               },
@@ -77,7 +56,6 @@
             el(TextControl, {
               label: "Category ID",
               value: attributes.categoryId,
-              help: "Enter Category ID to filter.",
               onChange: function (val) {
                 setAttributes({ categoryId: val });
               },
@@ -85,7 +63,6 @@
             el(TextControl, {
               label: "Tag ID",
               value: attributes.tagId,
-              help: "Enter Tag ID to filter.",
               onChange: function (val) {
                 setAttributes({ tagId: val });
               },
@@ -105,7 +82,7 @@
               },
             }),
             el(ToggleControl, {
-              label: "Open Links in New Tab",
+              label: "Open in New Tab",
               checked: attributes.openInNewTab,
               onChange: function (val) {
                 setAttributes({ openInNewTab: val });
@@ -121,7 +98,7 @@
       ];
     },
     save: function () {
-      return null; // Dynamic block
+      return null;
     },
   });
 })(

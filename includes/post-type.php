@@ -4,7 +4,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Register the 'aggregated_news' custom post type.
+ * Register 'aggregated_news' Custom Post Type.
+ * Strict: No editor, no thumbnail.
  */
 function n2n_register_cpt_aggregated_news() {
 	$labels = array(
@@ -12,9 +13,6 @@ function n2n_register_cpt_aggregated_news() {
 		'singular_name'         => _x( 'News', 'Post Type Singular Name', 'n2n-aggregator' ),
 		'menu_name'             => __( 'Aggregated News', 'n2n-aggregator' ),
 		'name_admin_bar'        => __( 'News Item', 'n2n-aggregator' ),
-		'archives'              => __( 'News Archives', 'n2n-aggregator' ),
-		'attributes'            => __( 'Item Attributes', 'n2n-aggregator' ),
-		'parent_item_colon'     => __( 'Parent Item:', 'n2n-aggregator' ),
 		'all_items'             => __( 'All News', 'n2n-aggregator' ),
 		'add_new_item'          => __( 'Add New News Item', 'n2n-aggregator' ),
 		'add_new'               => __( 'Add New', 'n2n-aggregator' ),
@@ -26,22 +24,12 @@ function n2n_register_cpt_aggregated_news() {
 		'search_items'          => __( 'Search News', 'n2n-aggregator' ),
 		'not_found'             => __( 'Not found', 'n2n-aggregator' ),
 		'not_found_in_trash'    => __( 'Not found in Trash', 'n2n-aggregator' ),
-		'featured_image'        => __( 'Featured Image', 'n2n-aggregator' ),
-		'set_featured_image'    => __( 'Set featured image', 'n2n-aggregator' ),
-		'remove_featured_image' => __( 'Remove featured image', 'n2n-aggregator' ),
-		'use_featured_image'    => __( 'Use as featured image', 'n2n-aggregator' ),
-		'insert_into_item'      => __( 'Insert into item', 'n2n-aggregator' ),
-		'uploaded_to_this_item' => __( 'Uploaded to this item', 'n2n-aggregator' ),
-		'items_list'            => __( 'Items list', 'n2n-aggregator' ),
-		'items_list_navigation' => __( 'Items list navigation', 'n2n-aggregator' ),
-		'filter_items_list'     => __( 'Filter items list', 'n2n-aggregator' ),
 	);
-	
+
 	$args = array(
 		'label'                 => __( 'News', 'n2n-aggregator' ),
-		'description'           => __( 'Aggregated news items.', 'n2n-aggregator' ),
 		'labels'                => $labels,
-		'supports'              => array( 'title', 'excerpt' ), // No editor, no thumbnail to avoid confusion (per requirements)
+		'supports'              => array( 'title', 'excerpt', 'revisions' ), // STRICT: NO editor, NO thumbnail
 		'taxonomies'            => array( 'category', 'post_tag' ),
 		'hierarchical'          => false,
 		'public'                => true,
@@ -56,22 +44,17 @@ function n2n_register_cpt_aggregated_news() {
 		'exclude_from_search'   => false,
 		'publicly_queryable'    => true,
 		'capability_type'       => 'post',
-		'show_in_rest'          => true, // Essential for n8n
+		'show_in_rest'          => true, // Required for n8n
 	);
-	
+
 	register_post_type( 'aggregated_news', $args );
 }
 add_action( 'init', 'n2n_register_cpt_aggregated_news' );
 
 /**
- * Add custom columns to the admin list screen.
+ * Custom Admin Columns.
  */
-function n2n_set_custom_edit_aggregated_news_columns( $columns ) {
-	// Remove default date and add it back at the end if you want specific order, 
-	// or just modify existing.
-	// We want: Title, Categories, Tags, Date.
-	
-	// Default columns: cb, title, date. We'll add taxonomies.
+function n2n_aggregated_news_columns( $columns ) {
 	$new_columns = array(
 		'cb' => $columns['cb'],
 		'title' => $columns['title'],
@@ -81,31 +64,16 @@ function n2n_set_custom_edit_aggregated_news_columns( $columns ) {
 	);
 	return $new_columns;
 }
-add_filter( 'manage_aggregated_news_posts_columns', 'n2n_set_custom_edit_aggregated_news_columns' );
+add_filter( 'manage_aggregated_news_posts_columns', 'n2n_aggregated_news_columns' );
 
-/**
- * Render custom columns content.
- */
-function n2n_custom_aggregated_news_column( $column, $post_id ) {
+function n2n_aggregated_news_custom_column( $column, $post_id ) {
 	switch ( $column ) {
-		case 'categories' :
-			$terms = get_the_term_list( $post_id, 'category', '', ',', '' );
-			if ( is_string( $terms ) ) {
-				echo $terms;
-			} else {
-				// Fallback or empty
-				echo '—';
-			}
+		case 'categories':
+			echo get_the_term_list( $post_id, 'category', '', ', ', '—' );
 			break;
-
-		case 'tags' :
-			$terms = get_the_term_list( $post_id, 'post_tag', '', ',', '' );
-			if ( is_string( $terms ) ) {
-				echo $terms;
-			} else {
-				echo '—';
-			}
+		case 'tags':
+			echo get_the_term_list( $post_id, 'post_tag', '', ', ', '—' );
 			break;
 	}
 }
-add_action( 'manage_aggregated_news_posts_custom_column' , 'n2n_custom_aggregated_news_column', 10, 2 );
+add_action( 'manage_aggregated_news_posts_custom_column', 'n2n_aggregated_news_custom_column', 10, 2 );
