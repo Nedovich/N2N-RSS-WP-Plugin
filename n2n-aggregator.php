@@ -27,6 +27,7 @@ require_once N2N_AGGREGATOR_PATH . 'includes/renderer.php';
 require_once N2N_AGGREGATOR_PATH . 'includes/redirect.php';
 require_once N2N_AGGREGATOR_PATH . 'includes/blocks.php';
 require_once N2N_AGGREGATOR_PATH . 'includes/shortcode.php';
+require_once N2N_AGGREGATOR_PATH . 'admin/shortcode-builder.php';
 
 // Activation
 register_activation_hook( __FILE__, 'n2n_aggregator_activate' );

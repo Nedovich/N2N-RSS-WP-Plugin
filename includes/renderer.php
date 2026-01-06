@@ -21,14 +21,19 @@ function n2n_render_news_item( $post_id, $args = [] ) {
 	$title     = get_the_title( $post_id );
 	$permalink = get_permalink( $post_id ); // ALWAYS link to permalink
 	$image_url = get_post_meta( $post_id, 'external_image_url', true );
-	$excerpt   = get_the_excerpt( $post_id );
+	
+	// Excerpt Logic
+	$excerpt_length = isset($args['excerpt_length']) ? intval($args['excerpt_length']) : 55;
+	$excerpt = get_the_excerpt( $post_id );
+	if ( $excerpt_length > 0 ) {
+		$excerpt = wp_trim_words( $excerpt, $excerpt_length, '...' );
+	}
 
 	$show_image   = ! empty( $args['show_image'] );
 	$show_excerpt = ! empty( $args['show_excerpt'] );
 	$new_tab      = ! empty( $args['new_tab'] );
 	
-	// Open SELF (permalink) in new tab if requested, though usually list items might differ.
-	// Requirement: "Link MUST be get_permalink"
+	// Open SELF (permalink) in new tab if requested
 	$target = $new_tab ? 'target="_blank" rel="noopener noreferrer"' : '';
 
 	ob_start();
@@ -70,27 +75,77 @@ function n2n_render_news_item( $post_id, $args = [] ) {
  */
 function n2n_render_news_query( $args = [] ) {
 	$defaults = array(
-		'posts_to_show' => 6,
-		'category_id'   => '',
-		'tag_id'        => '',
-		'layout'        => 'grid',
-		'show_image'    => true,
-		'show_excerpt'  => true,
-		'new_tab'       => false,
+		'posts_to_show'  => 6,
+		'category_id'    => '', // Legacy ID support
+		'category'       => '', // Slug support
+		'tag_id'         => '', // Legacy ID support
+		'tag'            => '', // Slug support
+		'layout'         => 'grid',
+		'show_image'     => true,
+		'show_excerpt'   => true,
+		'excerpt_length' => 55,
+		'orderby'        => 'date', // date | rand
+		'new_tab'        => false,
 	);
 	$args = wp_parse_args( $args, $defaults );
 
+	// Build Query
 	$query_args = array(
 		'post_type'           => 'aggregated_news',
 		'posts_per_page'      => intval( $args['posts_to_show'] ),
 		'post_status'         => 'publish',
-		'orderby'             => 'date',
-		'order'               => 'DESC',
 		'ignore_sticky_posts' => true,
 	);
 
-	if ( ! empty( $args['category_id'] ) ) $query_args['cat']    = intval( $args['category_id'] );
-	if ( ! empty( $args['tag_id'] ) )      $query_args['tag_id'] = intval( $args['tag_id'] );
+	// Order Handling
+	if ( 'rand' === $args['orderby'] ) {
+		$query_args['orderby'] = 'rand';
+	} else {
+		$query_args['orderby'] = 'date';
+		$query_args['order']   = 'DESC';
+	}
+
+	// Tax Query Builder (AND logic)
+	$tax_query = array();
+
+	// 1. Category (Slug or ID)
+	if ( ! empty( $args['category'] ) ) {
+		$tax_query[] = array(
+			'taxonomy' => 'category',
+			'field'    => 'slug',
+			'terms'    => $args['category'],
+		);
+	} elseif ( ! empty( $args['category_id'] ) ) {
+		$tax_query[] = array(
+			'taxonomy' => 'category',
+			'field'    => 'term_id',
+			'terms'    => intval( $args['category_id'] ),
+		);
+	}
+
+	// 2. Tag (Slug or ID)
+	if ( ! empty( $args['tag'] ) ) {
+		$tax_query[] = array(
+			'taxonomy' => 'post_tag',
+			'field'    => 'slug',
+			'terms'    => $args['tag'],
+		);
+	} elseif ( ! empty( $args['tag_id'] ) ) {
+		$tax_query[] = array(
+			'taxonomy' => 'post_tag',
+			'field'    => 'term_id',
+			'terms'    => intval( $args['tag_id'] ),
+		);
+	}
+
+	// Apply Tax Query if exists
+	if ( ! empty( $tax_query ) ) {
+		// If more than one, 'relation' defaults to AND, but explicit is good.
+		if ( count( $tax_query ) > 1 ) {
+			$tax_query['relation'] = 'AND'; // Implicitly AND, but let's be strict.
+		}
+		$query_args['tax_query'] = $tax_query;
+	}
 
 	$query = new WP_Query( $query_args );
 
@@ -118,7 +173,7 @@ function n2n_get_interstitial_html( $url, $image_url, $countdown = 0 ) {
 	ob_start();
 	?>
 	<div class="n2n-interstitial-wrapper">
-		<h1 class="n2n-interstitial-title"><?php the_title(); // Allowed as it is outputting current post title ?></h1>
+		<h1 class="n2n-interstitial-title"><?php the_title(); ?></h1>
 		
 		<?php if ( $image_url ) : ?>
 			<div class="n2n-interstitial-img">

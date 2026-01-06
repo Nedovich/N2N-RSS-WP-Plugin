@@ -1,0 +1,69 @@
+.n2n-builder-wrap {
+    max-width: 1200px;
+}
+
+.n2n-builder-container {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.n2n-builder-controls {
+    flex: 0 0 300px;
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #c3c4c7;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.n2n-control-group {
+    margin-bottom: 20px;
+}
+
+.n2n-control-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.n2n-control-group input[type=text],
+.n2n-control-group input[type=number],
+.n2n-control-group select {
+    width: 100%;
+}
+
+.n2n-builder-main {
+    flex: 1;
+}
+
+.n2n-shortcode-output {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #c3c4c7;
+    margin-bottom: 20px;
+}
+
+.n2n-copy-wrapper {
+    display: flex;
+    gap: 10px;
+}
+
+.n2n-copy-wrapper input {
+    flex: 1;
+    background: #f0f0f1;
+    color: #333;
+    cursor: default;
+}
+
+.n2n-preview-area {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #c3c4c7;
+    min-height: 400px;
+}
+
+#n2n-preview-canvas {
+    padding: 20px;
+    border: 1px dashed #ddd;
+    background: #fafafa;
+}
