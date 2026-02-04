@@ -5,6 +5,47 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
+  gap: 20px;
+}
+
+/* Grid Column Overrides */
+.n2n-news-feed.n2n-grid-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+.n2n-news-feed.n2n-grid-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+.n2n-news-feed.n2n-grid-cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+.n2n-news-feed.n2n-grid-cols-5 {
+  grid-template-columns: repeat(5, 1fr);
+}
+.n2n-news-feed.n2n-grid-cols-6 {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+/* Responsive Grid Adjustments */
+@media (max-width: 1024px) {
+  .n2n-news-feed.n2n-grid-cols-6,
+  .n2n-news-feed.n2n-grid-cols-5 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 768px) {
+  .n2n-news-feed.n2n-grid-cols-6,
+  .n2n-news-feed.n2n-grid-cols-5,
+  .n2n-news-feed.n2n-grid-cols-4,
+  .n2n-news-feed.n2n-grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .n2n-news-feed.n2n-grid-cols-4,
+  .n2n-news-feed.n2n-grid-cols-3,
+  .n2n-news-feed.n2n-grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* List */
@@ -99,4 +140,57 @@
 .n2n-timer-msg {
   font-style: italic;
   color: #777;
+}
+
+/* Event Group Icon */
+.n2n-group-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f0f0f1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.85em;
+  color: #555;
+  transition: background 0.2s;
+  margin-left: 10px;
+}
+.n2n-group-icon:hover {
+  background: #e0e0e0;
+  color: #0073aa;
+}
+.n2n-group-icon .dashicons {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+.n2n-group-count {
+  font-weight: 600;
+}
+
+/* Group Icon */
+.n2n-group-icon {
+  float: right;
+  text-decoration: none;
+  color: #555;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  font-size: 0.9em;
+  background: #f0f0f0;
+  padding: 2px 8px;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+.n2n-group-icon:hover {
+  background: #e0e0e0;
+  color: #000;
+}
+.n2n-group-icon .dashicons {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  line-height: 1.5;
 }

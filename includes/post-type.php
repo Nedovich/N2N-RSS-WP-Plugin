@@ -29,7 +29,7 @@ function n2n_register_cpt_aggregated_news() {
 	$args = array(
 		'label'                 => __( 'News', 'n2n-aggregator' ),
 		'labels'                => $labels,
-		'supports'              => array( 'title', 'excerpt', 'revisions' ), // STRICT: NO editor, NO thumbnail
+		'supports'              => array( 'title', 'editor', 'revisions' ), // STRICT: Editor ENABLED, NO thumbnail, NO excerpt
 		'taxonomies'            => array( 'category', 'post_tag' ),
 		'hierarchical'          => false,
 		'public'                => true,
@@ -44,6 +44,7 @@ function n2n_register_cpt_aggregated_news() {
 		'exclude_from_search'   => false,
 		'publicly_queryable'    => true,
 		'capability_type'       => 'post',
+		'map_meta_cap'          => true, // Required for correct capability mapping
 		'show_in_rest'          => true, // Required for n8n
 	);
 

@@ -27,7 +27,16 @@ require_once N2N_AGGREGATOR_PATH . 'includes/renderer.php';
 require_once N2N_AGGREGATOR_PATH . 'includes/redirect.php';
 require_once N2N_AGGREGATOR_PATH . 'includes/blocks.php';
 require_once N2N_AGGREGATOR_PATH . 'includes/shortcode.php';
+require_once N2N_AGGREGATOR_PATH . 'includes/rest-api.php';
 require_once N2N_AGGREGATOR_PATH . 'admin/shortcode-builder.php';
+require_once N2N_AGGREGATOR_PATH . 'includes/elementor/init.php';
+require_once N2N_AGGREGATOR_PATH . 'includes/event-logic.php';
+require_once N2N_AGGREGATOR_PATH . 'includes/rewrite.php';
+require_once N2N_AGGREGATOR_PATH . 'includes/template-loader.php';
+require_once N2N_AGGREGATOR_PATH . 'includes/migration-events.php';
+
+
+
 
 // Activation
 register_activation_hook( __FILE__, 'n2n_aggregator_activate' );

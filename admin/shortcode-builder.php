@@ -87,6 +87,8 @@ function n2n_ajax_preview_handler() {
 		'show_image'     => 'true' === $_POST['show_image'],
 		'show_excerpt'   => true,
 		'new_tab'        => true,
+		'is_event_main'  => true, // STRICT: Default to Main Events only (like shortcode)
+		'post_status'    => 'any', // ALLOW PREVIEW OF DRAFTS!
 	);
 
 	// REUSE Renderer
